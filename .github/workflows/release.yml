@@ -88,11 +88,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CLEAN_TAG=$(echo "$CDDA_TAG" | sed -E 's/^v?(cdda-)?//')
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            MOD_VERSION="v1.0.0+cdda.${CLEAN_TAG}-manual-$(date +%Y%m%d%H%M%S)"
-          else
-            MOD_VERSION="v1.0.0+cdda.${CLEAN_TAG}"
-          fi
+          MOD_VERSION="v1.0.0+cdda.${CLEAN_TAG}"
           git tag $MOD_VERSION
           git push origin $MOD_VERSION
           
@@ -106,7 +102,7 @@ jobs:
           
           gh release create $MOD_VERSION release/skyisland_feline_warper_${MOD_VERSION}.zip \
             --title "Sky Island Feline Warper $MOD_VERSION" \
-            --notes "Automatically synced with CDDA ${CDDA_TAG}. (Manual refresh release)"
+            --notes "Automatically synced with CDDA ${CDDA_TAG}."
 
       - name: Update last sync tag record
         if: steps.check.outputs.should_update == 'true'
