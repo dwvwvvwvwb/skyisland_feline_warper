@@ -80,7 +80,9 @@ jobs:
           git push origin HEAD:main
 
       - name: Create tag and release
-        if: steps.check.outputs.should_update == 'true' && steps.diff.outputs.changed == 'true'
+        if: |
+          (steps.check.outputs.should_update == 'true' && steps.diff.outputs.changed == 'true') ||
+          github.event_name == 'workflow_dispatch'
         env:
           CDDA_TAG: ${{ steps.cdda.outputs.tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
