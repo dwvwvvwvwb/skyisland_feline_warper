@@ -87,6 +87,7 @@ jobs:
         if: steps.check.outputs.should_update == 'true' && steps.diff.outputs.changed == 'true'
         env:
           CDDA_TAG: ${{ steps.cdda.outputs.tag }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           CLEAN_TAG=$(echo "$CDDA_TAG" | sed -E 's/^v?(cdda-)?//')
           MOD_VERSION="v1.0.0+cdda.${CLEAN_TAG}"
@@ -97,8 +98,6 @@ jobs:
           gh release create $MOD_VERSION release/*.zip \
             --title "Sky Island Feline Warper $MOD_VERSION" \
             --notes "Automatically synced with CDDA ${CDDA_TAG}."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Update last sync tag record
         if: steps.check.outputs.should_update == 'true'
