@@ -2,17 +2,17 @@ name: Auto Release on CDDA Update
 
 on:
   schedule:
-    - cron: '0 0 * * *'          # Check daily at UTC midnight
-  workflow_dispatch:             # Allow manual trigger
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 permissions:
-  contents: write                # Required for pushing tags and creating releases
+  contents: write
 
 jobs:
   sync-and-release:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout mod repository (without submodules yet)
+      - name: Checkout mod repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -45,13 +45,9 @@ jobs:
             echo "should_update=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Add CDDA as a shallow submodule (if not exists)
+      - name: Initialize and update submodule
         if: steps.check.outputs.should_update == 'true'
-        run: |
-          if [ ! -d "cdda" ]; then
-            git submodule add --depth 1 https://github.com/CleverRaven/Cataclysm-DDA.git cdda
-          fi
-          git submodule update --init --depth 1
+        run: git submodule update --init --depth 1
 
       - name: Checkout submodule to latest tag
         if: steps.check.outputs.should_update == 'true'
@@ -93,9 +89,16 @@ jobs:
           MOD_VERSION="v1.0.0+cdda.${CLEAN_TAG}"
           git tag $MOD_VERSION
           git push origin $MOD_VERSION
-          mkdir -p release
-          zip -r release/skyisland_feline_warper_${MOD_VERSION}.zip . -x "*.git*" "cdda/*" ".github/*" "release/*"
-          gh release create $MOD_VERSION release/*.zip \
+          
+          MOD_FOLDER="skyisland_feline_warper"
+          mkdir -p release/${MOD_FOLDER}
+          cp modinfo.json scenarios.json README.md LICENSE release/${MOD_FOLDER}/
+          
+          cd release
+          zip -r skyisland_feline_warper_${MOD_VERSION}.zip ${MOD_FOLDER}
+          cd ..
+          
+          gh release create $MOD_VERSION release/skyisland_feline_warper_${MOD_VERSION}.zip \
             --title "Sky Island Feline Warper $MOD_VERSION" \
             --notes "Automatically synced with CDDA ${CDDA_TAG}."
 
