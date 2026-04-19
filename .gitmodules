@@ -1,0 +1,4 @@
+[submodule "cdda"]
+	path = cdda
+	url = https://github.com/CleverRaven/Cataclysm-DDA.git
+
