@@ -1,0 +1,11 @@
+[
+  {
+    "type": "MOD_INFO",
+    "id": "skyIsland_extra_mut_compat_feline",
+    "name": "Sky Island: Feline Mutant Warper",
+    "authors": ["dwvwvvwvwb"],
+    "description": "Warper starts as a post-threshold Feline mutant, with access to both pre-threshold and Feline-specific mutations.",
+    "category": "content",
+    "dependencies": ["skyisland", "extra_mut_scens"]
+  }
+]
