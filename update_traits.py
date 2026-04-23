@@ -2,6 +2,7 @@
 """
 update_traits.py - Extract FELINE and generic mutations from CDDA.
 Only mutations with category containing 'FELINE' or no category are included.
+Debug mutations (starting with DEBUG_ or with debug flag) are excluded.
 """
 
 import json
@@ -19,27 +20,28 @@ EXCLUDE_IDS = {
     "CLAWS_RETRACT_active",
     "WINGS_INSECT_active",
     "CHANGING",
-    # Add any threshold markers if they accidentally appear
-    "THRESH_FELINE",
-    "THRESH_ALPHA",
-    "THRESH_BATRACHIAN",
-    # ... (optional: add all other THRESH_* to be safe)
 }
 
 def is_feline_or_generic(item):
-    """Return True if mutation should be included."""
+    """Return True if mutation should be included in the scenario."""
     mid = item["id"]
+
+    # Exclude known internal/pseudo mutations
     if mid in EXCLUDE_IDS:
         return False
 
+    # Exclude debug mutations (either by ID prefix or debug flag)
+    if mid.startswith("DEBUG_") or item.get("debug", False):
+        return False
+
     category = item.get("category")
-    # If category is missing, it's a generic mutation (like TOUGH)
+    # Include if no category is specified (generic mutations)
     if not category:
         return True
-    # If category contains 'FELINE', include it
+    # Include if category explicitly contains 'FELINE'
     if "FELINE" in category:
         return True
-    # Exclude everything else (other lines, thresholds)
+
     return False
 
 def collect_mutation_ids():
@@ -49,7 +51,7 @@ def collect_mutation_ids():
         for f in CDDA_ROOT.glob(pattern):
             try:
                 data = json.load(open(f, encoding='utf-8'))
-            except:
+            except Exception:
                 continue
             items = data if isinstance(data, list) else [data]
             for item in items:
