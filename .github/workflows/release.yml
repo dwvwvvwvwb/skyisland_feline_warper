@@ -19,13 +19,15 @@ jobs:
 
       - name: Get latest CDDA release tag via GitHub API
         id: cdda
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          API_RESPONSE=$(curl -s https://api.github.com/repos/CleverRaven/Cataclysm-DDA/releases?per_page=1)
-          LATEST_TAG=$(echo "$API_RESPONSE" | jq -r '.[0].tag_name')
-          LATEST_COMMIT=$(echo "$API_RESPONSE" | jq -r '.[0].target_commitish')
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo "commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
-          echo "Latest CDDA release tag: $LATEST_TAG"
+            API_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/CleverRaven/Cataclysm-DDA/releases?per_page=1)
+            LATEST_TAG=$(echo "$API_RESPONSE" | jq -r '.[0].tag_name')
+            LATEST_COMMIT=$(echo "$API_RESPONSE" | jq -r '.[0].target_commitish')
+            echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+            echo "commit=$LATEST_COMMIT" >> $GITHUB_OUTPUT
+            echo "Latest CDDA release tag: $LATEST_TAG"
 
       - name: Read last synced CDDA tag
         id: last
@@ -45,11 +47,13 @@ jobs:
             echo "should_update=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Initialize and update submodule
+      - name: Clone CDDA repository (shallow)
         if: steps.check.outputs.should_update == 'true'
-        run: git submodule update --init --depth 1
-
-      - name: Checkout submodule to latest tag
+        run: |
+          if [ -d "cdda" ]; then rm -rf cdda; fi
+          git clone --depth 1 https://github.com/CleverRaven/Cataclysm-DDA.git cdda
+      
+      - name: Checkout CDDA to latest tag
         if: steps.check.outputs.should_update == 'true'
         run: |
           cd cdda
@@ -80,9 +84,7 @@ jobs:
           git push origin HEAD:main
 
       - name: Create tag and release
-        if: |
-          (steps.check.outputs.should_update == 'true' && steps.diff.outputs.changed == 'true') ||
-          github.event_name == 'workflow_dispatch'
+        if: steps.check.outputs.should_update == 'true' && steps.diff.outputs.changed == 'true'
         env:
           CDDA_TAG: ${{ steps.cdda.outputs.tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -91,17 +93,17 @@ jobs:
           MOD_VERSION="v1.0.0+cdda.${CLEAN_TAG}"
           git tag $MOD_VERSION
           git push origin $MOD_VERSION
-          
-          MOD_FOLDER="skyisland_feline_warper"
+
+          MOD_FOLDER="backrooms_feline_mutant_start"
           mkdir -p release/${MOD_FOLDER}
           cp modinfo.json scenarios.json README.md LICENSE release/${MOD_FOLDER}/
-          
+
           cd release
-          zip -r skyisland_feline_warper_${MOD_VERSION}.zip ${MOD_FOLDER}
+          zip -r ${MOD_FOLDER}_${MOD_VERSION}.zip ${MOD_FOLDER}
           cd ..
-          
-          gh release create $MOD_VERSION release/skyisland_feline_warper_${MOD_VERSION}.zip \
-            --title "Sky Island Feline Warper $MOD_VERSION" \
+
+          gh release create "$MOD_VERSION" "release/${MOD_FOLDER}_${MOD_VERSION}.zip" \
+            --title "Backrooms: Feline Mutant Start $MOD_VERSION" \
             --notes "Automatically synced with CDDA ${CDDA_TAG}."
 
       - name: Update last sync tag record
