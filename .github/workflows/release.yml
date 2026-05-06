@@ -94,7 +94,7 @@ jobs:
           git tag $MOD_VERSION
           git push origin $MOD_VERSION
 
-          MOD_FOLDER="backrooms_feline_mutant_start"
+          MOD_FOLDER="skyisland_feline_warper"
           mkdir -p release/${MOD_FOLDER}
           cp modinfo.json scenarios.json README.md LICENSE release/${MOD_FOLDER}/
 
@@ -103,7 +103,7 @@ jobs:
           cd ..
 
           gh release create "$MOD_VERSION" "release/${MOD_FOLDER}_${MOD_VERSION}.zip" \
-            --title "Backrooms: Feline Mutant Start $MOD_VERSION" \
+            --title "Sky Island Feline Warper $MOD_VERSION" \
             --notes "Automatically synced with CDDA ${CDDA_TAG}."
 
       - name: Update last sync tag record
